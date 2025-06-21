@@ -1,0 +1,297 @@
+create a java based chatbot for interactive communication
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+public class SimpleChatBot {
+
+    private static final Map<String, String> responses = new HashMap<>();
+
+    // Load some basic responses
+    static {
+        responses.put("hi", "Hello! How can I help you?");
+        responses.put("hello", "Hi there! What can I do for you?");
+        responses.put("how are you", "I'm just a bot, but I'm doing great! How about you?");
+        responses.put("bye", "Goodbye! Have a great day!");
+        responses.put("thanks", "You're welcome!");
+        responses.put("what is your name", "I'm ChatBot, your virtual assistant.");
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("ChatBot: Hi! I'm ChatBot. Type 'bye' to exit.");
+
+        while (true) {
+            System.out.print("You: ");
+            String userInput = scanner.nextLine().toLowerCase().trim();
+
+            if (userInput.equals("bye")) {
+                System.out.println("ChatBot: " + responses.get("bye"));
+                break;
+            }
+
+            boolean responded = false;
+            for (String key : responses.keySet()) {
+                if (userInput.contains(key)) {
+                    System.out.println("ChatBot: " + responses.get(key));
+                    responded = true;
+                    break;
+                }
+            }
+
+            if (!responded) {
+                System.out.println("ChatBot: Sorry, I didn't understand that.");
+            }
+        }
+
+        scanner.close();
+    }
+}
+
+
+2)use natural language processing(NLP) techniques
+
+import edu.stanford.nlp.pipeline.*;
+import edu.stanford.nlp.ling.CoreLabel;
+
+import java.util.*;
+
+public class SimpleNLPChatBot {
+
+    private static StanfordCoreNLP pipeline;
+    private static final Map<String, String> responses = new HashMap<>();
+
+    static {
+        // Predefined responses
+        responses.put("hello", "Hi there! How can I help you?");
+        responses.put("name", "I'm ChatBot powered by NLP!");
+        responses.put("weather", "I'm not a weather bot, but I hope it's sunny!");
+        responses.put("bye", "Goodbye! It was nice talking to you.");
+        responses.put("thanks", "You're welcome!");
+    }
+
+    // NLP Pipeline Initialization
+    private static void initializePipeline() {
+        Properties props = new Properties();
+        props.setProperty("annotators", "tokenize,ssplit,pos,lemma");
+        pipeline = new StanfordCoreNLP(props);
+    }
+
+    // Lemmatize user input
+    private static List<String> lemmatize(String input) {
+        List<String> lemmas = new ArrayList<>();
+        CoreDocument doc = new CoreDocument(input);
+        pipeline.annotate(doc);
+
+        for (CoreLabel tok : doc.tokens()) {
+            lemmas.add(tok.lemma().toLowerCase());
+        }
+        return lemmas;
+    }
+
+    public static void main(String[] args) {
+        initializePipeline();
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("ChatBot: Hello! Ask me anything. Type 'bye' to exit.");
+
+        while (true) {
+            System.out.print("You: ");
+            String input = scanner.nextLine();
+
+            if (input.equalsIgnoreCase("bye")) {
+                System.out.println("ChatBot: " + responses.get("bye"));
+                break;
+            }
+
+            List<String> lemmas = lemmatize(input);
+            boolean responded = false;
+
+            for (String lemma : lemmas) {
+                if (responses.containsKey(lemma)) {
+                    System.out.println("ChatBot: " + responses.get(lemma));
+                    responded = true;
+                    break;
+                }
+            }
+
+            if (!responded) {
+                System.out.println("ChatBot: I'm not sure I understand. Can you rephrase?");
+            }
+        }
+
+        scanner.close();
+    }
+}
+
+
+3)implement machine learning logic or rule based answers
+
+import java.util.*;
+import java.util.regex.*;
+
+public class RuleBasedChatBot {
+
+    private static final Map<Pattern, String> rules = new LinkedHashMap<>();
+
+    static {
+        rules.put(Pattern.compile(".*(hi|hello|hey).*", Pattern.CASE_INSENSITIVE), "Hello! How can I assist you?");
+        rules.put(Pattern.compile(".*(your name).*", Pattern.CASE_INSENSITIVE), "I'm ChatBot 1.0!");
+        rules.put(Pattern.compile(".*(how are you).*", Pattern.CASE_INSENSITIVE), "I'm doing great! How about you?");
+        rules.put(Pattern.compile(".*(weather).*", Pattern.CASE_INSENSITIVE), "I can't check the weather yet, but it's always sunny in here!");
+        rules.put(Pattern.compile(".*(bye|exit).*", Pattern.CASE_INSENSITIVE), "Goodbye! Have a great day!");
+        rules.put(Pattern.compile(".*(thank).*", Pattern.CASE_INSENSITIVE), "You're welcome!");
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("ChatBot: Hi! I'm a rule-based bot. Ask me something!");
+
+        while (true) {
+            System.out.print("You: ");
+            String input = scanner.nextLine().toLowerCase();
+
+            boolean matched = false;
+            for (Map.Entry<Pattern, String> entry : rules.entrySet()) {
+                if (entry.getKey().matcher(input).matches()) {
+                    System.out.println("ChatBot: " + entry.getValue());
+                    matched = true;
+                    if (entry.getValue().toLowerCase().contains("goodbye")) return;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                System.out.println("ChatBot: Sorry, I didn't understand that.");
+            }
+        }
+    }
+}
+
+
+4)train the bot to respond to frequently asked question
+
+# train_faq_bot.py
+import pickle
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+# Training Data
+data = {
+    "greeting": ["hi", "hello", "hey there"],
+    "name": ["what is your name", "who are you", "your name please"],
+    "reset_password": ["how to reset my password", "forgot password", "reset password"],
+    "contact_support": ["how to contact support", "need help", "customer service"],
+    "goodbye": ["bye", "see you", "goodbye"]
+}
+
+responses = {
+    "greeting": "Hello! How can I help you today?",
+    "name": "I'm ChatBot 1.0.",
+    "reset_password": "To reset your password, click 'Forgot Password' on the login page.",
+    "contact_support": "You can reach us at support@example.com",
+    "goodbye": "Goodbye! Have a great day!"
+}
+
+# Prepare training data
+X, y = [], []
+for intent, phrases in data.items():
+    X.extend(phrases)
+    y.extend([intent] * len(phrases))
+
+vectorizer = TfidfVectorizer()
+X_vec = vectorizer.fit_transform(X)
+
+model = MultinomialNB()
+model.fit(X_vec, y)
+
+# Save model, vectorizer, and responses
+with open("faq_model.pkl", "wb") as f:
+    pickle.dump((vectorizer, model, responses), f)
+
+5)integrate with a GUI or web interface for real time interaction
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.net.*;
+
+public class ChatBotGUI extends JFrame {
+
+    private JTextArea chatArea;
+    private JTextField inputField;
+    private JButton sendButton;
+
+    public ChatBotGUI() {
+        setTitle("FAQ ChatBot");
+        setSize(400, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        chatArea = new JTextArea();
+        chatArea.setEditable(false);
+        JScrollPane scroll = new JScrollPane(chatArea);
+        add(scroll, BorderLayout.CENTER);
+
+        JPanel inputPanel = new JPanel(new BorderLayout());
+        inputField = new JTextField();
+        sendButton = new JButton("Send");
+
+        inputPanel.add(inputField, BorderLayout.CENTER);
+        inputPanel.add(sendButton, BorderLayout.EAST);
+        add(inputPanel, BorderLayout.SOUTH);
+
+        sendButton.addActionListener(e -> sendMessage());
+        inputField.addActionListener(e -> sendMessage());
+
+        setVisible(true);
+    }
+
+    private void sendMessage() {
+        String message = inputField.getText().trim();
+        if (message.isEmpty()) return;
+
+        chatArea.append("You: " + message + "\n");
+        inputField.setText("");
+
+        try {
+            String response = sendToServer(message);
+            chatArea.append("ChatBot: " + response + "\n");
+        } catch (Exception ex) {
+            chatArea.append("ChatBot: (Error connecting to server)\n");
+        }
+    }
+
+    private String sendToServer(String message) throws IOException {
+        URL url = new URL("http://localhost:5000/chat");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+
+        String jsonInput = "{\"message\":\"" + message + "\"}";
+        try (OutputStream os = con.getOutputStream()) {
+            os.write(jsonInput.getBytes());
+        }
+
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                response.append(line);
+            }
+        }
+
+        // Simple way to extract message from JSON (or use a JSON parser)
+        String full = response.toString();
+        int start = full.indexOf(":\"") + 2;
+        int end = full.lastIndexOf("\"");
+        return full.substring(start, end);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(ChatBotGUI::new);
+    }
+}

@@ -1,0 +1,431 @@
+1)design a system to search,book,and manage hotel rooms
+public class User {
+    String userId;
+    String name;
+    String email;
+    String password;
+}
+
+public class Room {
+    String roomId;
+    String hotelName;
+    String location;
+    String type; // e.g. Single, Double, Suite
+    double price;
+    boolean isAvailable;
+}
+
+import java.time.LocalDate;
+
+public class Booking {
+    String bookingId;
+    String userId;
+    String roomId;
+    LocalDate checkInDate;
+    LocalDate checkOutDate;
+}
+
+public class SearchService {
+    public List<Room> searchRooms(List<Room> allRooms, String location, String type) {
+        List<Room> result = new ArrayList<>();
+        for (Room room : allRooms) {
+            if (room.location.equalsIgnoreCase(location)
+                    && room.type.equalsIgnoreCase(type)
+                    && room.isAvailable) {
+                result.add(room);
+            }
+        }
+        return result;
+    }
+}
+
+public class BookingService {
+    private List<Booking> bookings = new ArrayList<>();
+
+    public Booking bookRoom(String userId, Room room, LocalDate checkIn, LocalDate checkOut) {
+        if (!room.isAvailable) return null;
+
+        Booking booking = new Booking();
+        booking.bookingId = UUID.randomUUID().toString();
+        booking.userId = userId;
+        booking.roomId = room.roomId;
+        booking.checkInDate = checkIn;
+        booking.checkOutDate = checkOut;
+        room.isAvailable = false;
+        bookings.add(booking);
+        return booking;
+    }
+
+    public List<Booking> getUserBookings(String userId) {
+        return bookings.stream()
+            .filter(b -> b.userId.equals(userId))
+            .collect(Collectors.toList());
+    }
+}
+public class Database {
+    public static List<Room> rooms = new ArrayList<>();
+    public static List<User> users = new ArrayList<>();
+    public static List<Booking> bookings = new ArrayList<>();
+}
+
+// In main method
+Scanner sc = new Scanner(System.in);
+System.out.println("1. Register\n2. Login");
+int choice = sc.nextInt();
+sc.nextLine(); // consume newline
+
+// ... Prompt for details and add to users list
+
+
+SearchService search = new SearchService();
+BookingService booking = new BookingService();
+
+// Example search
+System.out.println("Enter location: ");
+String location = sc.nextLine();
+System.out.println("Enter room type: ");
+String type = sc.nextLine();
+
+List<Room> found = search.searchRooms(Database.rooms, location, type);
+if (found.isEmpty()) {
+    System.out.println("No rooms available.");
+} else {
+    // Select a room and book
+}
+
+
+2)add room cateorization (e.g.,standard,deluxe,suite)
+public enum RoomCategory {
+    STANDARD,
+    DELUXE,
+    SUITE
+}
+
+public class Room {
+    public String roomId;
+    public String hotelName;
+    public String location;
+    public RoomCategory category;  // NEW
+    public double price;
+    public boolean isAvailable;
+
+    public Room(String roomId, String hotelName, String location,
+                RoomCategory category, double price, boolean isAvailable) {
+        this.roomId = roomId;
+        this.hotelName = hotelName;
+        this.location = location;
+        this.category = category;
+        this.price = price;
+        this.isAvailable = isAvailable;
+    }
+
+    @Override
+    public String toString() {
+        return roomId + " | " + hotelName + " | " + location + " | " + category +
+               " | ₹" + price + " | Available: " + isAvailable;
+    }
+}
+
+public class SearchService {
+    public List<Room> searchRooms(List<Room> allRooms, String location, RoomCategory category) {
+        List<Room> result = new ArrayList<>();
+        for (Room room : allRooms) {
+            if (room.location.equalsIgnoreCase(location)
+                    && room.category == category
+                    && room.isAvailable) {
+                result.add(room);
+            }
+        }
+        return result;
+    }
+}
+
+// In Database or Main method
+Database.rooms.add(new Room("R101", "Hotel Sunrise", "Mumbai", RoomCategory.STANDARD, 2500.0, true));
+Database.rooms.add(new Room("R102", "Hotel Sunrise", "Mumbai", RoomCategory.DELUXE, 4000.0, true));
+Database.rooms.add(new Room("R103", "Hotel Elegance", "Pune", RoomCategory.SUITE, 6000.0, true));
+
+
+
+System.out.print("Enter location: ");
+String location = sc.nextLine();
+
+System.out.println("Choose room category: 1.STANDARD  2.DELUXE  3.SUITE");
+int catChoice = sc.nextInt();
+sc.nextLine(); // consume newline
+
+RoomCategory category;
+switch (catChoice) {
+    case 1: category = RoomCategory.STANDARD; break;
+    case 2: category = RoomCategory.DELUXE; break;
+    case 3: category = RoomCategory.SUITE; break;
+    default:
+        System.out.println("Invalid choice.");
+        return;
+}
+
+SearchService searchService = new SearchService();
+List<Room> availableRooms = searchService.searchRooms(Database.rooms, location, category);
+
+if (availableRooms.isEmpty()) {
+    System.out.println("No available rooms in that category and location.");
+} else {
+    for (Room room : availableRooms) {
+        System.out.println(room);
+    }
+}
+
+allow users to make and cancel reservation
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class BookingService {
+
+    private final List<Booking> bookings = new ArrayList<>();
+
+    // Book a room
+    public Booking bookRoom(String userId, Room room, LocalDate checkIn, LocalDate checkOut) {
+        if (!room.isAvailable) {
+            System.out.println("Room is already booked.");
+            return null;
+        }
+
+        Booking booking = new Booking(
+                UUID.randomUUID().toString(),
+                userId,
+                room.roomId,
+                checkIn,
+                checkOut
+        );
+
+        room.isAvailable = false;
+        bookings.add(booking);
+        System.out.println("Booking successful: " + booking.bookingId);
+        return booking;
+    }
+
+    // Cancel a booking
+    public boolean cancelBooking(String bookingId) {
+        for (Booking booking : bookings) {
+            if (booking.bookingId.equals(bookingId)) {
+                Room room = Database.rooms.stream()
+                        .filter(r -> r.roomId.equals(booking.roomId))
+                        .findFirst().orElse(null);
+
+                if (room != null) room.isAvailable = true;
+                bookings.remove(booking);
+                System.out.println("Booking canceled.");
+                return true;
+            }
+        }
+        System.out.println("Booking ID not found.");
+        return false;
+    }
+
+    // View all bookings by a user
+    public List<Booking> getBookingsByUser(String userId) {
+        return bookings.stream()
+                .filter(b -> b.userId.equals(userId))
+                .collect(Collectors.toList());
+    }
+}
+
+import java.time.LocalDate;
+
+public class Booking {
+    public String bookingId;
+    public String userId;
+    public String roomId;
+    public LocalDate checkInDate;
+    public LocalDate checkOutDate;
+
+    public Booking(String bookingId, String userId, String roomId,
+                   LocalDate checkInDate, LocalDate checkOutDate) {
+        this.bookingId = bookingId;
+        this.userId = userId;
+        this.roomId = roomId;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+    }
+
+    @Override
+    public String toString() {
+        return "BookingID: " + bookingId +
+               ", Room: " + roomId +
+               ", Check-In: " + checkInDate +
+               ", Check-Out: " + checkOutDate;
+    }
+}
+
+// After user login
+BookingService bookingService = new BookingService();
+Scanner sc = new Scanner(System.in);
+
+System.out.println("1. Book Room\n2. View My Bookings\n3. Cancel Booking");
+int choice = sc.nextInt();
+sc.nextLine();
+
+switch (choice) {
+    case 1 -> {
+        // call search service to show rooms
+        System.out.println("Enter Room ID to book:");
+        String roomId = sc.nextLine();
+        Room roomToBook = Database.rooms.stream()
+                .filter(r -> r.roomId.equals(roomId))
+                .findFirst().orElse(null);
+
+        if (roomToBook != null) {
+            System.out.println("Enter check-in date (YYYY-MM-DD):");
+            LocalDate checkIn = LocalDate.parse(sc.nextLine());
+            System.out.println("Enter check-out date (YYYY-MM-DD):");
+            LocalDate checkOut = LocalDate.parse(sc.nextLine());
+            bookingService.bookRoom(loggedInUser.userId, roomToBook, checkIn, checkOut);
+        }
+    }
+    case 2 -> {
+        List<Booking> userBookings = bookingService.getBookingsByUser(loggedInUser.userId);
+        if (userBookings.isEmpty()) {
+            System.out.println("No bookings found.");
+        } else {
+            userBookings.forEach(System.out::println);
+        }
+    }
+    case 3 -> {
+        System.out.println("Enter Booking ID to cancel:");
+        String bookingId = sc.nextLine();
+        bookingService.cancelBooking(bookingId);
+    }
+}
+implement payment simulation and booking details view
+
+public class Booking {
+    public String bookingId;
+    public String userId;
+    public String roomId;
+    public LocalDate checkInDate;
+    public LocalDate checkOutDate;
+    public boolean isPaid;
+
+    public Booking(String bookingId, String userId, String roomId,
+                   LocalDate checkInDate, LocalDate checkOutDate) {
+        this.bookingId = bookingId;
+        this.userId = userId;
+        this.roomId = roomId;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.isPaid = false;
+    }
+
+    @Override
+    public String toString() {
+        return "BookingID: " + bookingId +
+                "\nRoom ID: " + roomId +
+                "\nCheck-In: " + checkInDate +
+                "\nCheck-Out: " + checkOutDate +
+                "\nPayment Status: " + (isPaid ? "PAID" : "PENDING");
+    }
+}
+public class BookingService {
+    private final List<Booking> bookings = new ArrayList<>();
+
+    public Booking bookRoom(String userId, Room room, LocalDate checkIn, LocalDate checkOut) {
+        if (!room.isAvailable) {
+            System.out.println("Room is already booked.");
+            return null;
+        }
+
+        Booking booking = new Booking(UUID.randomUUID().toString(), userId, room.roomId, checkIn, checkOut);
+        room.isAvailable = false;
+        bookings.add(booking);
+        System.out.println("Room reserved. Please proceed to payment.");
+        return booking;
+    }
+
+    public boolean makePayment(String bookingId) {
+        for (Booking booking : bookings) {
+            if (booking.bookingId.equals(bookingId)) {
+                if (booking.isPaid) {
+                    System.out.println("Already paid.");
+                    return false;
+                }
+                booking.isPaid = true;
+                System.out.println("Payment successful for Booking ID: " + bookingId);
+                return true;
+            }
+        }
+        System.out.println("Booking ID not found.");
+        return false;
+    }
+
+    public List<Booking> getBookingsByUser(String userId) {
+        return bookings.stream()
+                .filter(b -> b.userId.equals(userId))
+                .collect(Collectors.toList());
+    }
+
+    public Booking getBookingById(String bookingId) {
+        return bookings.stream()
+                .filter(b -> b.bookingId.equals(bookingId))
+                .findFirst()
+                .orElse(null);
+    }
+}
+System.out.println("1. Book Room\n2. View My Bookings\n3. Cancel Booking\n4. Make Payment\n5. View Booking Details");
+int choice = sc.nextInt();
+sc.nextLine(); // Consume newline
+
+switch (choice) {
+    case 1 -> {
+        // Assume search service returns valid room list
+        System.out.print("Enter Room ID to book: ");
+        String roomId = sc.nextLine();
+        Room room = Database.rooms.stream()
+            .filter(r -> r.roomId.equals(roomId))
+            .findFirst().orElse(null);
+
+        if (room != null) {
+            System.out.print("Check-in (YYYY-MM-DD): ");
+            LocalDate in = LocalDate.parse(sc.nextLine());
+            System.out.print("Check-out (YYYY-MM-DD): ");
+            LocalDate out = LocalDate.parse(sc.nextLine());
+            Booking booking = bookingService.bookRoom(user.userId, room, in, out);
+            if (booking != null) {
+                System.out.println("Booking ID: " + booking.bookingId);
+            }
+        }
+    }
+
+    case 2 -> {
+        List<Booking> bookings = bookingService.getBookingsByUser(user.userId);
+        if (bookings.isEmpty()) {
+            System.out.println("No bookings found.");
+        } else {
+            bookings.forEach(System.out::println);
+        }
+    }
+
+    case 3 -> {
+        System.out.print("Enter Booking ID to cancel: ");
+        String bId = sc.nextLine();
+        bookingService.cancelBooking(bId);
+    }
+
+    case 4 -> {
+        System.out.print("Enter Booking ID to pay for: ");
+        String bId = sc.nextLine();
+        bookingService.makePayment(bId);
+    }
+
+    case 5 -> {
+        System.out.print("Enter Booking ID to view: ");
+        String bId = sc.nextLine();
+        Booking b = bookingService.getBookingById(bId);
+        if (b != null) {
+            System.out.println("Booking Details:");
+            System.out.println(b);
+        } else {
+            System.out.println("Booking not found.");
+        }
+    }
+}
